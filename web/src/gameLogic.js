@@ -829,17 +829,4 @@ class GamePanel {
     }
 }
 
-// ── Boot ────────────────────────────────────────────────────
-window.onload = () => {
-    const canvas = document.getElementById('gameCanvas');
-    const panel = new GamePanel(canvas);
-
-    function loop() {
-        panel.update();
-        panel.render();
-        // Clear lingering clicks
-        if(panel.inputHandler.click) panel.inputHandler.consumeClick();
-        requestAnimationFrame(loop);
-    }
-    requestAnimationFrame(loop);
-};
+export { GamePanel };
