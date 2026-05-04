@@ -1,52 +1,59 @@
 // ── Configuration ───────────────────────────────────────────
 const GameConfig = {
-    WINDOW_WIDTH: 1000,
-    WINDOW_HEIGHT: 650,
-    SKY_COLOR: '#87CEEB',
-    GROUND_COLOR: '#008000',
-    GROUND_HEIGHT: 60,
+    WINDOW_WIDTH: 1550,
+    WINDOW_HEIGHT: 794,
+    SKY_COLOR: 'rgb(197, 244, 243)',
+    GROUND_COLOR: 'rgb(228, 222, 109)',
+    GROUND_HEIGHT: 50,
 
-    GRAVITY: 0.1,
+    GRAVITY: 0.4,
     AIR_RESISTANCE_X: 0.996,
     AIR_RESISTANCE_Y: 0.999,
-    GROUND_FRICTION: 0.99,
+    GROUND_FRICTION: 0.996,
     BOUNCE_DAMPING: 0.55,
     SPEED_THRESHOLD: 0.1,
 
-    CANNON_BASE_DIAMETER: 50,
-    CANNON_BARREL_WIDTH: 15,
-    CANNON_WHEEL_SIZE: 50,
-    CANNON_WHEEL_COLOR: '#8B4513',
+    CANNON_BASE_DIAMETER: 100,
+    CANNON_BARREL_WIDTH: 300,
+    CANNON_WHEEL_SIZE: 100,
+    CANNON_WHEEL_COLOR: 'rgb(139, 69, 19)',
 
-    SLIDER_WIDTH: 200,
-    SLIDER_TRACK_COLOR: '#D3D3D3',
+    SLIDER_WIDTH: 250,
+    SLIDER_TRACK_COLOR: 'gray',
     FIRE_BUTTON_WIDTH: 100,
-    FIRE_BUTTON_HEIGHT: 40,
+    FIRE_BUTTON_HEIGHT: 50,
     CLEAR_BUTTON_WIDTH: 100,
     CLEAR_BUTTON_HEIGHT: 40,
-    COLOR_BOX_WIDTH: 30,
-    MENU_BOX_COLOR: 'rgba(255,255,255,0.7)',
+    COLOR_BOX_WIDTH: 20,
+    MENU_BOX_COLOR: 'rgb(200, 200, 200)',
 
-    C1_X: 100,
-    C1_SLIDER_X: 20,
-    C1_FIRE_BTN_X: 50,
-    C1_FIRE_BTN_Y: 535,
-    C1_CLEAR_BTN_X: 160,
-    C1_CLEAR_BTN_Y: 535,
-    C1_COLOR_SEL_X: 30,
-    C1_COLOR_SEL_Y: 400,
+    C1_X: 90,
+    C1_SLIDER_X: 50,
+    C1_FIRE_BTN_X: 105,
+    C1_FIRE_BTN_Y: 350,
+    C1_CLEAR_BTN_X: 320,
+    C1_CLEAR_BTN_Y: 25,
+    C1_COLOR_SEL_X: 50,
+    C1_COLOR_SEL_Y: 75,
 
-    C2_X: 900,
-    C2_SLIDER_X: 780,
-    C2_FIRE_BTN_X: 730,
-    C2_FIRE_BTN_Y: 535,
-    C2_CLEAR_BTN_X: 840,
-    C2_CLEAR_BTN_Y: 535,
-    C2_COLOR_SEL_X: 750,
-    C2_COLOR_SEL_Y: 400,
+    C2_X: 1400,
+    C2_SLIDER_X: 1200,
+    C2_FIRE_BTN_X: 1275,
+    C2_FIRE_BTN_Y: 350,
+    C2_CLEAR_BTN_X: 1075,
+    C2_CLEAR_BTN_Y: 25,
+    C2_COLOR_SEL_X: 1200,
+    C2_COLOR_SEL_Y: 75,
 
-    BALL_COLORS: ['#808080', '#0000ff', '#ff0000', '#00ff00', '#ffc800', '#00ffff'],
-    SPEED_DIVISOR: 8,
+    BALL_COLORS: [
+        'rgb(85, 85, 85)',
+        'rgb(3, 61, 180)',
+        'rgb(255, 0, 0)',
+        'rgb(27, 137, 60)',
+        'rgb(255, 177, 14)',
+        'rgb(164, 73, 164)'
+    ],
+    SPEED_DIVISOR: 4.5,
     CLOUD_COUNT: 4,
 
     SCORE_DESTROY: 10,
@@ -73,7 +80,6 @@ class SoundManager {
             'metal': 'sounds/metal.wav',
             'explosion': 'sounds/pixel_burst.wav'
         };
-        // Preload
         this.cache = {};
         for (let key in this.sounds) {
             let audio = new Audio(this.sounds[key]);
@@ -83,7 +89,7 @@ class SoundManager {
     play(name) {
         if (this.sounds[name]) {
             let audio = new Audio(this.sounds[name]);
-            audio.play().catch(e => console.log('Audio playback prevented by browser policy'));
+            audio.play().catch(() => {});
         }
     }
 }
@@ -98,7 +104,6 @@ class InputHandler {
 
         this.pausePressed = false;
         this.restartPressed = false;
-
         this.heldKeys = new Set();
 
         this.p1FirePressed = false;
@@ -109,44 +114,34 @@ class InputHandler {
         this.p2ClearPressed = false;
         this.p2ColorSelect = -1;
 
-        // Mouse
         canvas.addEventListener('mousedown', (e) => {
             this.click = true;
             this.dragging = true;
             this.updateCursor(e, canvas);
         });
-        canvas.addEventListener('mouseup', (e) => {
+        window.addEventListener('mouseup', () => {
             this.dragging = false;
         });
-        canvas.addEventListener('mousemove', (e) => {
+        window.addEventListener('mousemove', (e) => {
             this.updateCursor(e, canvas);
         });
 
-        // Keyboard
         window.addEventListener('keydown', (e) => {
             this.heldKeys.add(e.code);
             switch (e.code) {
                 case 'KeyP': this.pausePressed = true; break;
                 case 'KeyR': this.restartPressed = true; break;
-
-                // P1 Fire/Clear
                 case 'KeyF':
                 case 'Space': this.p1FirePressed = true; break;
                 case 'KeyC': this.p1ClearPressed = true; break;
-
-                // P1 Color
                 case 'Digit1': this.p1ColorSelect = 0; break;
                 case 'Digit2': this.p1ColorSelect = 1; break;
                 case 'Digit3': this.p1ColorSelect = 2; break;
                 case 'Digit4': this.p1ColorSelect = 3; break;
                 case 'Digit5': this.p1ColorSelect = 4; break;
                 case 'Digit6': this.p1ColorSelect = 5; break;
-
-                // P2 Fire/Clear
                 case 'Enter': this.p2FirePressed = true; break;
                 case 'Backspace': this.p2ClearPressed = true; break;
-
-                // P2 Color
                 case 'Numpad1': this.p2ColorSelect = 0; break;
                 case 'Numpad2': this.p2ColorSelect = 1; break;
                 case 'Numpad3': this.p2ColorSelect = 2; break;
@@ -162,11 +157,14 @@ class InputHandler {
 
     updateCursor(e, canvas) {
         const rect = canvas.getBoundingClientRect();
-        this.cursorX = e.clientX - rect.left;
-        this.cursorY = e.clientY - rect.top;
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        this.cursorX = (e.clientX - rect.left) * scaleX;
+        this.cursorY = (e.clientY - rect.top) * scaleY;
     }
 
     consumeClick() { this.click = false; }
+    isDragging() { return this.dragging; }
 
     isPausePressed() { let v = this.pausePressed; this.pausePressed = false; return v; }
     isRestartPressed() { let v = this.restartPressed; this.restartPressed = false; return v; }
@@ -206,7 +204,8 @@ class PhysicsEngine {
         }
 
         // Speed threshold
-        if (Math.abs(ball.speedX) < GameConfig.SPEED_THRESHOLD) {
+        if ((ball.speedX < 0 && ball.speedX > -GameConfig.SPEED_THRESHOLD) ||
+            (ball.speedX > 0 && ball.speedX < GameConfig.SPEED_THRESHOLD)) {
             ball.speedX = 0;
         }
 
@@ -236,16 +235,13 @@ class CollisionEngine {
         let toRemoveA = new Set();
         let toRemoveB = new Set();
 
-        for (let i = 0; i < groupA.length; i++) {
-            for (let j = 0; j < groupB.length; j++) {
-                let a = groupA[i];
-                let b = groupB[j];
-                
+        for (let a of groupA) {
+            for (let b of groupB) {
                 if (toRemoveA.has(a) || toRemoveB.has(b)) continue;
 
                 if (this.isColliding(a, b)) {
                     let winner = this.determineWinner(a, b);
-                    let cx = (a.x + b.x) / 2 + a.diameter/2; // rough center
+                    let cx = (a.x + b.x) / 2 + a.diameter/2;
                     let cy = (a.y + b.y) / 2 + a.diameter/2;
                     
                     results.push({ball1: a, ball2: b, cx, cy, winner});
@@ -269,8 +265,9 @@ class CollisionEngine {
     isColliding(a, b) {
         let dx = (a.x + a.diameter/2) - (b.x + b.diameter/2);
         let dy = (a.y + a.diameter/2) - (b.y + b.diameter/2);
-        let dist = Math.sqrt(dx*dx + dy*dy);
-        return dist <= (a.diameter/2 + b.diameter/2);
+        let distance = Math.sqrt(dx*dx + dy*dy);
+        let radiusSum = a.diameter/2 + b.diameter/2;
+        return distance <= radiusSum;
     }
 
     determineWinner(a, b) {
@@ -283,15 +280,16 @@ class CollisionEngine {
 }
 
 class Ball {
-    constructor(x, y, diameter, speedX, speedY, color, size, power) {
+    constructor(x, y, diameter, speedX, speedY, color, size, power, speedDivisor) {
         this.x = x;
         this.y = y;
         this.diameter = diameter;
-        this.speedX = speedX;
-        this.speedY = speedY; // mostly unused directly, passed to velocity
-        this.velocityX = speedX;
-        this.velocityY = speedY;
-        this.velocity = 0;
+        this.speedX = speedX / speedDivisor;
+        this.speedY = (speedY / speedDivisor) * -1;
+        this.velocityX = this.speedX;
+        this.velocityY = 0; // The Java engine tracks velocity separately. Actually wait!
+        // In Java: velocity = this.speedY.
+        this.velocity = this.speedY;
         this.color = color;
         this.size = size;
         this.power = power;
@@ -301,18 +299,18 @@ class Ball {
 class Cloud {
     constructor() {
         this.x = Math.random() * GameConfig.WINDOW_WIDTH;
-        this.y = Math.random() * (GameConfig.WINDOW_HEIGHT / 2);
-        this.width = 60 + Math.random() * 40;
-        this.height = 30 + Math.random() * 20;
-        this.speed = 0.2 + Math.random() * 0.5;
+        this.y = Math.random() * 400;
+        this.width = 30 + Math.random() * 30;
+        this.height = this.width / 2;
+        this.speed = 0.25 + Math.random() * 0.5;
     }
     draw(ctx) {
         this.x += this.speed;
         if (this.x > GameConfig.WINDOW_WIDTH) {
             this.x = -this.width;
-            this.y = Math.random() * (GameConfig.WINDOW_HEIGHT / 2);
+            this.y = Math.random() * 400;
         }
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.fillStyle = 'rgb(204, 204, 204)';
         ctx.beginPath();
         ctx.ellipse(this.x + this.width/2, this.y + this.height/2, this.width/2, this.height/2, 0, 0, Math.PI*2);
         ctx.fill();
@@ -325,13 +323,15 @@ class FireEffect {
         this.y = y;
         this.particles = [];
         this.done = false;
+        let colors = ['orange', 'red', 'yellow', 'blue', 'white'];
         for (let i = 0; i < 20; i++) {
             this.particles.push({
                 x: this.x,
                 y: this.y,
                 vx: (Math.random() - 0.5) * 10,
                 vy: (Math.random() - 0.5) * 10,
-                life: 1.0
+                life: 1.0,
+                color: colors[Math.floor(Math.random() * colors.length)]
             });
         }
     }
@@ -342,9 +342,11 @@ class FireEffect {
                 allDead = false;
                 p.x += p.vx;
                 p.y += p.vy;
-                p.life -= 0.05;
-                ctx.fillStyle = `rgba(255, 100, 0, ${p.life})`;
+                p.life -= 0.025; // 40 frames duration = 1/40 = 0.025
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = Math.max(0, p.life);
                 ctx.fillRect(p.x, p.y, 4, 4);
+                ctx.globalAlpha = 1.0;
             }
         }
         if (allDead) this.done = true;
@@ -373,14 +375,14 @@ class SliderInput {
         let cx = this.inputHandler.cursorX;
         let cy = this.inputHandler.cursorY;
 
-        if (this.inputHandler.dragging &&
+        if (this.inputHandler.isDragging() &&
             cx > (this.sliderX - 10) + this.x &&
             cx < this.sliderX + (this.sliderWidth + 10) + this.x &&
             cy > this.y && cy < this.y + this.height) {
             this.sliderGrabbed = true;
         }
 
-        if (!this.inputHandler.dragging) {
+        if (!this.inputHandler.isDragging()) {
             this.sliderGrabbed = false;
         }
 
@@ -388,15 +390,12 @@ class SliderInput {
             this.sliderX = cx - this.x - (this.sliderWidth / 2);
         }
 
-        // Track
         ctx.fillStyle = GameConfig.SLIDER_TRACK_COLOR;
         ctx.fillRect(this.x, this.y, this.width, this.height);
 
-        // Thumb
         ctx.fillStyle = '#000000';
         ctx.fillRect(this.sliderX + this.x, this.y - (this.sliderHeight / 3), this.sliderWidth, this.sliderHeight);
 
-        // Label
         ctx.fillStyle = '#000000';
         ctx.font = 'bold 24px Calibri';
         let labelWidth = ctx.measureText(this.label).width;
@@ -457,8 +456,6 @@ class Cannon {
         let y = GameConfig.WINDOW_HEIGHT - this.diameter - 50;
 
         let effectiveAngle = this.angle * this.side.directionMultiplier;
-        
-        // Pivot point
         let cx = this.cannonX;
         let cy = y + this.diameter;
 
@@ -476,14 +473,12 @@ class Cannon {
             yPoly[i] = rotated[1];
         }
 
-        // Ground lock
         let yShift = y + 100 - yPoly[3];
         for (let i = 0; i < 4; i++) yPoly[i] += yShift;
 
         this.ballX = xPoly[1] + (xPoly[2] - xPoly[1]) + this.side.ballSpawnOffset;
         this.ballY = yPoly[1];
 
-        // Draw barrel polygon
         ctx.fillStyle = '#000';
         ctx.beginPath();
         ctx.moveTo(xPoly[0], yPoly[0]);
@@ -491,10 +486,12 @@ class Cannon {
         ctx.closePath();
         ctx.fill();
 
-        // Draw wheel
         ctx.fillStyle = GameConfig.CANNON_WHEEL_COLOR;
         ctx.beginPath();
-        ctx.arc(this.cannonX, GameConfig.WINDOW_HEIGHT - 75, GameConfig.CANNON_WHEEL_SIZE/2, 0, Math.PI*2);
+        // Wheel drawn at cannonX - 25, WINDOW_HEIGHT - 100 in Java. 
+        // In Java: fillOval(cannonX - 25, GameConfig.WINDOW_HEIGHT - 100, CANNON_WHEEL_SIZE, CANNON_WHEEL_SIZE)
+        let wRadius = GameConfig.CANNON_WHEEL_SIZE / 2;
+        ctx.arc((this.cannonX - 25) + wRadius, (GameConfig.WINDOW_HEIGHT - 100) + wRadius, wRadius, 0, Math.PI*2);
         ctx.fill();
     }
 
@@ -529,20 +526,16 @@ class Cannon {
         if (this.side === Side.LEFT) {
             effPower = this.power * -1;
             let divisor = 157;
-            speedX = (effPower - (effPower / divisor) * (this.angle * -1));
-            speedY = ((effPower / divisor) * (this.angle * -1));
+            speedX = Math.trunc(effPower - (effPower / divisor) * (this.angle * -1));
+            speedY = Math.trunc((effPower / divisor) * (this.angle * -1));
         } else {
             effPower = this.power;
             let divisor = 203;
-            speedX = (effPower - (effPower / divisor) * (this.angle * -1));
-            speedY = ((effPower / divisor) * this.angle);
+            speedX = Math.trunc(effPower - (effPower / divisor) * (this.angle * -1));
+            speedY = Math.trunc((effPower / divisor) * this.angle);
         }
-        
-        // Adjust initial speed similar to Java division
-        speedX /= GameConfig.SPEED_DIVISOR;
-        speedY /= GameConfig.SPEED_DIVISOR;
 
-        this.balls.push(new Ball(this.ballX, this.ballY, this.diameter, speedX, speedY, this.colorSelected, this.size, this.power));
+        this.balls.push(new Ball(this.ballX, this.ballY, this.diameter, speedX, speedY, this.colorSelected, this.size, this.power, GameConfig.SPEED_DIVISOR));
         this.soundManager.play('cannonfire');
         this.soundManager.play('metal');
     }
@@ -552,7 +545,7 @@ class Cannon {
         ctx.fillRect(this.fireButtonX, this.fireButtonY, GameConfig.FIRE_BUTTON_WIDTH, GameConfig.FIRE_BUTTON_HEIGHT);
         ctx.fillStyle = '#000';
         ctx.font = 'bold 36px Calibri';
-        ctx.fillText("FIRE", this.fireButtonX + 15, this.fireButtonY + 32);
+        ctx.fillText("FIRE", this.fireButtonX + 15, this.fireButtonY + 36);
 
         ctx.fillStyle = 'cyan';
         ctx.fillRect(this.clearButtonX, this.clearButtonY, GameConfig.CLEAR_BUTTON_WIDTH, GameConfig.CLEAR_BUTTON_HEIGHT);
@@ -624,14 +617,11 @@ class Cannon {
 class HUD {
     drawScores(ctx, s1, s2) {
         ctx.font = 'bold 28px Calibri';
-        
         let p1t = "P1: " + s1;
         ctx.fillStyle = 'rgb(3, 61, 180)';
         ctx.fillText(p1t, GameConfig.WINDOW_WIDTH / 2 - 150, 35);
-
         ctx.fillStyle = '#000';
         ctx.fillText(" | ", GameConfig.WINDOW_WIDTH / 2 - 20, 35);
-
         let p2t = "P2: " + s2;
         ctx.fillStyle = 'rgb(180, 30, 30)';
         ctx.fillText(p2t, GameConfig.WINDOW_WIDTH / 2 + 30, 35);
@@ -640,12 +630,10 @@ class HUD {
     drawPauseOverlay(ctx) {
         ctx.fillStyle = 'rgba(0,0,0,0.6)';
         ctx.fillRect(0, 0, GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
-
         ctx.fillStyle = '#FFF';
         ctx.font = 'bold 64px Calibri';
         let txt = "PAUSED";
         ctx.fillText(txt, (GameConfig.WINDOW_WIDTH - ctx.measureText(txt).width)/2, GameConfig.WINDOW_HEIGHT/2 - 30);
-
         ctx.fillStyle = 'rgb(255, 200, 50)';
         ctx.font = 'bold 28px Calibri';
         let sub = "Press P to Resume";
@@ -655,7 +643,6 @@ class HUD {
     drawGameOverOverlay(ctx, s1, s2) {
         ctx.fillStyle = 'rgba(0,0,0,0.6)';
         ctx.fillRect(0, 0, GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
-
         ctx.font = 'bold 64px Calibri';
         let winner;
         if (s1 > s2) {
@@ -669,12 +656,10 @@ class HUD {
             winner = "IT'S A TIE!";
         }
         ctx.fillText(winner, (GameConfig.WINDOW_WIDTH - ctx.measureText(winner).width)/2, GameConfig.WINDOW_HEIGHT/2 - 40);
-
         ctx.font = 'bold 28px Calibri';
         ctx.fillStyle = '#FFF';
         let scores = `Final Score — P1: ${s1} | P2: ${s2}`;
         ctx.fillText(scores, (GameConfig.WINDOW_WIDTH - ctx.measureText(scores).width)/2, GameConfig.WINDOW_HEIGHT/2 + 10);
-
         ctx.fillStyle = 'rgb(255, 200, 50)';
         let rest = "Press R to Restart";
         ctx.fillText(rest, (GameConfig.WINDOW_WIDTH - ctx.measureText(rest).width)/2, GameConfig.WINDOW_HEIGHT/2 + 50);
@@ -683,14 +668,11 @@ class HUD {
     drawControlHints(ctx) {
         ctx.font = '16px Calibri';
         let y = GameConfig.WINDOW_HEIGHT - 8;
-
         ctx.fillStyle = 'rgb(3, 61, 180)';
         ctx.fillText("P1: W/S Angle | A/D Power | Q/E Size | Space Fire | C Clear | 1-6 Color", 20, y);
-
         ctx.fillStyle = 'rgb(180, 30, 30)';
         let p2t = "P2: \u2191/\u2193 Angle | \u2190/\u2192 Power | ,/. Size | Enter Fire | Bksp Clear | Num1-6 Color";
         ctx.fillText(p2t, GameConfig.WINDOW_WIDTH - ctx.measureText(p2t).width - 20, y);
-
         ctx.fillStyle = 'rgb(80, 80, 80)';
         let glob = "P = Pause | R = Restart";
         ctx.fillText(glob, (GameConfig.WINDOW_WIDTH - ctx.measureText(glob).width)/2, y - 18);
@@ -730,8 +712,8 @@ class GamePanel {
         for(let i=0; i<GameConfig.CLOUD_COUNT; i++) this.clouds.push(new Cloud());
         
         this.fireEffects = [];
-        
-        // Try to play gamestart (might be blocked until user interacts)
+        this.started = false;
+
         document.body.addEventListener('click', () => {
             if(!this.started) {
                 this.soundManager.play('gamestart');
@@ -755,7 +737,6 @@ class GamePanel {
 
         if (this.state !== GameState.RUNNING) return;
 
-        // Keyboard sliders
         let step = 3;
         if (this.inputHandler.isP1AngleUp()) this.a1.adjustValue(step);
         if (this.inputHandler.isP1AngleDown()) this.a1.adjustValue(-step);
@@ -781,11 +762,9 @@ class GamePanel {
         let c2c = this.inputHandler.getP2ColorSelect();
         if (c2c >= 0) this.c2.selectColor(c2c);
 
-        // Physics
         for (let b of this.c1.balls) this.physics.update(b);
         for (let b of this.c2.balls) this.physics.update(b);
 
-        // Collisions
         let cols = this.collisions.processCollisions(this.c1.balls, this.c2.balls);
         for (let r of cols) {
             this.fireEffects.push(new FireEffect(r.cx, r.cy));
@@ -829,4 +808,4 @@ class GamePanel {
     }
 }
 
-export { GamePanel };
+export { GamePanel, GameConfig };
