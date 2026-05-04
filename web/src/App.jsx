@@ -1,8 +1,10 @@
-import React from 'react';
-import { Download, Code2, ExternalLink } from 'lucide-react';
+import React, { useState } from 'react';
+import { Download, Code2, Play } from 'lucide-react';
 import GameCanvas from './GameCanvas';
 
 function App() {
+  const [isPlaying, setIsPlaying] = useState(false);
+
   return (
     <>
       <main>
@@ -15,9 +17,21 @@ function App() {
           </p>
         </section>
 
-        <section>
-          <GameCanvas />
+        <section style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
+          <button onClick={() => setIsPlaying(true)} style={{
+            display: 'flex', alignItems: 'center', gap: '10px',
+            padding: '20px 40px', fontSize: '24px', fontWeight: 'bold',
+            backgroundColor: 'var(--accent)', color: 'white', border: 'none',
+            borderRadius: '50px', cursor: 'pointer', fontFamily: 'Outfit, sans-serif',
+            boxShadow: '0 0 30px var(--accent-glow)', transition: 'transform 0.2s ease'
+          }} onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'} 
+             onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}>
+            <Play size={28} fill="white" />
+            PLAY NOW
+          </button>
         </section>
+
+        {isPlaying && <GameCanvas onExit={() => setIsPlaying(false)} />}
 
         <section className="cta-section">
           <h2 className="cta-title">Want the Classic Experience?</h2>

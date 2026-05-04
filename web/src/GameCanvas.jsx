@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { GamePanel, GameConfig } from './gameLogic';
 
-export default function GameCanvas() {
+export default function GameCanvas({ onExit }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -35,19 +35,43 @@ export default function GameCanvas() {
 
     animationFrameId = requestAnimationFrame(renderLoop);
 
+    const handleKeyDown = (e) => {
+        if (e.key === 'Escape') onExit();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
     return () => {
       cancelAnimationFrame(animationFrameId);
+      window.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [onExit]);
 
   return (
-    <div className="game-wrapper">
-      <div className="glass-panel" style={{ width: '100%', maxWidth: '100vw', overflow: 'hidden', display: 'flex', justifyContent: 'center' }}>
+    <div style={{
+      position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+      backgroundColor: '#000', zIndex: 9999,
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+    }}>
+      <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 10000 }}>
+        <button onClick={onExit} style={{
+          padding: '10px 20px', backgroundColor: 'red', color: 'white',
+          border: 'none', borderRadius: '5px', fontWeight: 'bold', cursor: 'pointer',
+          fontFamily: 'Calibri, sans-serif', fontSize: '18px',
+          boxShadow: '0 4px 6px rgba(0,0,0,0.5)'
+        }}>
+          Exit Game (Esc)
+        </button>
+      </div>
+      <div style={{ 
+        boxShadow: '0 0 50px rgba(255,255,255,0.2)', 
+        borderRadius: '8px', overflow: 'hidden', 
+        display: 'flex', justifyContent: 'center' 
+      }}>
         <canvas 
           ref={canvasRef} 
           width={GameConfig.WINDOW_WIDTH} 
           height={GameConfig.WINDOW_HEIGHT} 
-          style={{ width: '100%', maxWidth: `${GameConfig.WINDOW_WIDTH}px`, height: 'auto' }}
+          style={{ width: '100%', maxWidth: '100vw', maxHeight: '100vh', objectFit: 'contain' }}
         />
       </div>
     </div>

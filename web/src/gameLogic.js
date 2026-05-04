@@ -476,7 +476,9 @@ class Cannon {
         let yShift = y + 100 - yPoly[3];
         for (let i = 0; i < 4; i++) yPoly[i] += yShift;
 
-        this.ballX = xPoly[1] + (xPoly[2] - xPoly[1]) + this.side.ballSpawnOffset;
+        // Fix: In the original Java, the offset included "- diameter" to pull the ball perfectly inside the barrel!
+        let spawnOffset = (this.side === Side.LEFT) ? (-this.diameter - 2) : (-this.diameter + 90);
+        this.ballX = xPoly[1] + (xPoly[2] - xPoly[1]) + spawnOffset;
         this.ballY = yPoly[1];
 
         ctx.fillStyle = '#000';
@@ -603,7 +605,7 @@ class Cannon {
         let rad = angle / 100.0;
         let rx = tx * Math.cos(rad) - ty * Math.sin(rad);
         let ry = tx * Math.sin(rad) + ty * Math.cos(rad);
-        return [rx + cx, ry + cy];
+        return [Math.trunc(rx + cx), Math.trunc(ry + cy)];
     }
 
     reset() {
