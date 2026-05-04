@@ -4,7 +4,11 @@ A **2D local multiplayer cannon battle game** built with Java AWT/Swing, featuri
 
 ## ⬇️ Download & Play
 
-### Quick Start (No build required!)
+### 🌐 Play in Browser (New!)
+You can now play the game instantly in your browser — no download required!
+👉 **[Play Cannon Battle Online](https://Siddharthpo03.github.io/Java-Cannon-Game-Simulation/)**
+
+### 💻 Quick Start (Desktop Version)
 1. **Download** the latest [`cannon-game-1.0.0.jar`](https://github.com/Siddharthpo03/Java-Cannon-Game-Simulation/releases/latest) from Releases
 2. **Run it**: Double-click the JAR, or run:
    ```bash
