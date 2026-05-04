@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Download, Code2, Play } from 'lucide-react';
 import GameCanvas from './GameCanvas';
-import logo from './assets/logo.jpg';
+import logo from './assets/logo.png';
 
 function App() {
   const [isPlaying, setIsPlaying] = useState(false);
