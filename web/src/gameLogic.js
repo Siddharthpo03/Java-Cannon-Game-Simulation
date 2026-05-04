@@ -827,10 +827,10 @@ class GamePanel {
             this.a2.reset(); this.s2.reset(); this.p2.reset();
         }
 
-        if (this.state !== GameState.RUNNING) return;
-        
         if (this.screenShake > 0) this.screenShake *= 0.9;
         if (this.screenShake < 0.5) this.screenShake = 0;
+
+        if (this.state !== GameState.RUNNING) return;
 
         let step = 3;
         if (this.inputHandler.isP1AngleUp()) this.a1.adjustValue(step);
@@ -899,9 +899,9 @@ class GamePanel {
         }
 
         let grad = ctx.createLinearGradient(0, 0, 0, GameConfig.WINDOW_HEIGHT);
-        grad.addColorStop(0, '#0f2027');
-        grad.addColorStop(0.5, '#203a43');
-        grad.addColorStop(1, '#2c5364');
+        grad.addColorStop(0, '#54b4eb');
+        grad.addColorStop(0.5, '#87ceeb');
+        grad.addColorStop(1, '#e0f6ff');
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
 
