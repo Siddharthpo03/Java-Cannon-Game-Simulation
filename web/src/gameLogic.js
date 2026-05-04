@@ -630,6 +630,10 @@ class Cannon {
         this.score = 0;
         this.colorSelected = GameConfig.BALL_COLORS[0];
     }
+
+    addScore(points) {
+        this.score += points;
+    }
 }
 
 // ── HUD ─────────────────────────────────────────────────────
