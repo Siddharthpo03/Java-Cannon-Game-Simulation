@@ -43,6 +43,7 @@ export default function GameCanvas({ onExit }) {
     return () => {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener('keydown', handleKeyDown);
+      panel.destroy();
     };
   }, [onExit]);
 

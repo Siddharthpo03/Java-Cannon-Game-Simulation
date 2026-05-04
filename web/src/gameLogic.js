@@ -97,6 +97,7 @@ class SoundManager {
 // ── Input ───────────────────────────────────────────────────
 class InputHandler {
     constructor(canvas) {
+        this.canvas = canvas;
         this.click = false;
         this.dragging = false;
         this.cursorX = 0;
@@ -114,19 +115,18 @@ class InputHandler {
         this.p2ClearPressed = false;
         this.p2ColorSelect = -1;
 
-        canvas.addEventListener('mousedown', (e) => {
+        this.mousedownHandler = (e) => {
             this.click = true;
             this.dragging = true;
             this.updateCursor(e, canvas);
-        });
-        window.addEventListener('mouseup', () => {
+        };
+        this.mouseupHandler = () => {
             this.dragging = false;
-        });
-        window.addEventListener('mousemove', (e) => {
+        };
+        this.mousemoveHandler = (e) => {
             this.updateCursor(e, canvas);
-        });
-
-        window.addEventListener('keydown', (e) => {
+        };
+        this.keydownHandler = (e) => {
             this.heldKeys.add(e.code);
             switch (e.code) {
                 case 'KeyP': this.pausePressed = true; break;
@@ -149,10 +149,24 @@ class InputHandler {
                 case 'Numpad5': this.p2ColorSelect = 4; break;
                 case 'Numpad6': this.p2ColorSelect = 5; break;
             }
-        });
-        window.addEventListener('keyup', (e) => {
+        };
+        this.keyupHandler = (e) => {
             this.heldKeys.delete(e.code);
-        });
+        };
+
+        canvas.addEventListener('mousedown', this.mousedownHandler);
+        window.addEventListener('mouseup', this.mouseupHandler);
+        window.addEventListener('mousemove', this.mousemoveHandler);
+        window.addEventListener('keydown', this.keydownHandler);
+        window.addEventListener('keyup', this.keyupHandler);
+    }
+
+    destroy() {
+        this.canvas.removeEventListener('mousedown', this.mousedownHandler);
+        window.removeEventListener('mouseup', this.mouseupHandler);
+        window.removeEventListener('mousemove', this.mousemoveHandler);
+        window.removeEventListener('keydown', this.keydownHandler);
+        window.removeEventListener('keyup', this.keyupHandler);
     }
 
     updateCursor(e, canvas) {
@@ -263,10 +277,13 @@ class CollisionEngine {
     }
 
     isColliding(a, b) {
-        let dx = (a.x + a.diameter/2) - (b.x + b.diameter/2);
-        let dy = (a.y + a.diameter/2) - (b.y + b.diameter/2);
+        // MATCH EXACT JAVA LOGIC: The original Java game used top-left coordinates (a.getX() and b.getX())
+        // instead of center coordinates, causing different-sized balls to have offset hitboxes.
+        // We MUST use the exact same math so the game plays exactly like the Java original.
+        let dx = Math.trunc(a.x) - Math.trunc(b.x);
+        let dy = Math.trunc(a.y) - Math.trunc(b.y);
         let distance = Math.sqrt(dx*dx + dy*dy);
-        let radiusSum = a.diameter/2 + b.diameter/2;
+        let radiusSum = (a.diameter / 2.0) + (b.diameter / 2.0);
         return distance <= radiusSum;
     }
 
@@ -716,12 +733,19 @@ class GamePanel {
         this.fireEffects = [];
         this.started = false;
 
-        document.body.addEventListener('click', () => {
+        this.audioStartHandler = () => {
             if(!this.started) {
                 this.soundManager.play('gamestart');
                 this.started = true;
             }
-        }, {once: true});
+        };
+
+        document.body.addEventListener('click', this.audioStartHandler, {once: true});
+    }
+
+    destroy() {
+        this.inputHandler.destroy();
+        document.body.removeEventListener('click', this.audioStartHandler);
     }
 
     update() {
