@@ -213,7 +213,11 @@ class PhysicsEngine {
         ball.speedX *= GameConfig.AIR_RESISTANCE_X;
 
         // Wall bounce
-        if (ball.x > GameConfig.WINDOW_WIDTH - ball.diameter || ball.x < 0) {
+        if (ball.x > GameConfig.WINDOW_WIDTH - ball.diameter) {
+            ball.x = GameConfig.WINDOW_WIDTH - ball.diameter;
+            ball.speedX *= -1;
+        } else if (ball.x < 0) {
+            ball.x = 0;
             ball.speedX *= -1;
         }
 
@@ -303,9 +307,8 @@ class Ball {
         this.diameter = diameter;
         this.speedX = speedX / speedDivisor;
         this.speedY = (speedY / speedDivisor) * -1;
-        this.velocityX = this.speedX;
-        this.velocityY = 0; // The Java engine tracks velocity separately. Actually wait!
-        // In Java: velocity = this.speedY.
+        this.velocityX = 0; // Fix: in Java, velocityX is 0 by default. Setting it to speedX caused wall bounces to cancel out to 0!
+        this.velocityY = 0; 
         this.velocity = this.speedY;
         this.color = color;
         this.size = size;
