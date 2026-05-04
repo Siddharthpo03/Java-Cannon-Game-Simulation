@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Download, Code2, Play } from 'lucide-react';
 import GameCanvas from './GameCanvas';
+import logo from './assets/logo.png';
 
 function App() {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -9,6 +10,7 @@ function App() {
     <>
       <main>
         <section className="hero">
+          <img src={logo} alt="Cannon Battle Logo" style={{ width: '150px', height: '150px', objectFit: 'contain', marginBottom: '1rem', filter: 'drop-shadow(0 0 20px rgba(255, 255, 255, 0.5))' }} />
           <h1 className="title-glow">CANNON BATTLE</h1>
           <p className="subtitle">
             A premium local multiplayer artillery game with real-time physics,

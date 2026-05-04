@@ -57,7 +57,8 @@ const GameConfig = {
     CLOUD_COUNT: 4,
 
     SCORE_DESTROY: 10,
-    SCORE_MUTUAL: 5
+    SCORE_MUTUAL: 5,
+    SCORE_LIMIT: 100
 };
 
 const GameState = {
@@ -237,6 +238,11 @@ class PhysicsEngine {
         ball.velocity += GameConfig.GRAVITY;
         ball.y += ball.velocityY + ball.velocity;
 
+        // Trail updates
+        ball.trail.push({x: ball.x + ball.diameter/2, y: ball.y + ball.diameter/2, life: 1.0});
+        for (let t of ball.trail) t.life -= 0.1;
+        ball.trail = ball.trail.filter(t => t.life > 0);
+
         // Ground bounce
         if (ball.y + ball.diameter >= GameConfig.WINDOW_HEIGHT) {
             ball.velocity = ball.velocity * -1 + GameConfig.BOUNCE_DAMPING;
@@ -313,6 +319,7 @@ class Ball {
         this.color = color;
         this.size = size;
         this.power = power;
+        this.trail = [];
     }
 }
 
@@ -370,6 +377,33 @@ class FireEffect {
             }
         }
         if (allDead) this.done = true;
+    }
+}
+
+class FloatingText {
+    constructor(x, y, text, color) {
+        this.x = x;
+        this.y = y;
+        this.text = text;
+        this.color = color;
+        this.life = 1.0;
+        this.vy = -2;
+    }
+    draw(ctx) {
+        this.y += this.vy;
+        this.life -= 0.02;
+        ctx.globalAlpha = Math.max(0, this.life);
+        ctx.fillStyle = this.color;
+        ctx.font = 'bold 32px Calibri';
+        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+        ctx.shadowBlur = 4;
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
+        ctx.fillText(this.text, this.x, this.y);
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+        ctx.globalAlpha = 1.0;
     }
 }
 
@@ -458,12 +492,15 @@ class Cannon {
         this.colorSelected = GameConfig.BALL_COLORS[0];
         this.balls = [];
         this.score = 0;
+        this.recoil = 0;
     }
 
     draw(ctx, angle, size, power) {
         this.angle = angle;
         this.size = size;
         this.power = power;
+        
+        if (this.recoil > 0) this.recoil *= 0.8;
 
         this.drawBalls(ctx);
         this.drawCannon(ctx);
@@ -479,16 +516,20 @@ class Cannon {
         let cx = this.cannonX;
         let cy = y + this.diameter;
 
+        // Apply recoil offset
+        let recoilOffset = this.recoil * (this.side === Side.LEFT ? -1 : 1);
+        let rx = cx + recoilOffset;
+
         let xPoly, yPoly;
         if (this.side === Side.LEFT) {
-            xPoly = [this.cannonX, this.cannonX + this.width, this.cannonX + this.width, this.cannonX];
+            xPoly = [rx, rx + this.width, rx + this.width, rx];
         } else {
-            xPoly = [this.cannonX, this.cannonX - this.width, this.cannonX - this.width, this.cannonX];
+            xPoly = [rx, rx - this.width, rx - this.width, rx];
         }
         yPoly = [y, y, y + this.diameter, y + this.diameter];
 
         for (let i = 0; i < 4; i++) {
-            let rotated = this.rotateXY(xPoly[i], yPoly[i], effectiveAngle, cx, cy);
+            let rotated = this.rotateXY(xPoly[i], yPoly[i], effectiveAngle, rx, cy);
             xPoly[i] = rotated[0];
             yPoly[i] = rotated[1];
         }
@@ -536,6 +577,20 @@ class Cannon {
         }
 
         for (let b of this.balls) {
+            // Draw Trail
+            if (b.trail && b.trail.length > 0) {
+                ctx.beginPath();
+                ctx.moveTo(b.trail[0].x, b.trail[0].y);
+                for (let i = 1; i < b.trail.length; i++) {
+                    ctx.lineTo(b.trail[i].x, b.trail[i].y);
+                }
+                ctx.strokeStyle = `rgba(255, 255, 255, 0.5)`;
+                ctx.lineWidth = b.diameter * 0.6;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+            }
+
+            // Draw Ball
             ctx.fillStyle = b.color;
             ctx.beginPath();
             ctx.arc(b.x + b.diameter/2, b.y + b.diameter/2, b.diameter/2, 0, Math.PI*2);
@@ -557,6 +612,7 @@ class Cannon {
             speedY = Math.trunc((effPower / divisor) * this.angle);
         }
 
+        this.recoil = 25; // Apply recoil juice
         this.balls.push(new Ball(this.ballX, this.ballY, this.diameter, speedX, speedY, this.colorSelected, this.size, this.power, GameConfig.SPEED_DIVISOR));
         this.soundManager.play('cannonfire');
         this.soundManager.play('metal');
@@ -738,6 +794,8 @@ class GamePanel {
         for(let i=0; i<GameConfig.CLOUD_COUNT; i++) this.clouds.push(new Cloud());
         
         this.fireEffects = [];
+        this.floatingTexts = [];
+        this.screenShake = 0;
         this.started = false;
 
         this.audioStartHandler = () => {
@@ -763,12 +821,16 @@ class GamePanel {
             this.c1.reset();
             this.c2.reset();
             this.fireEffects = [];
+            this.floatingTexts = [];
             this.state = GameState.RUNNING;
             this.a1.reset(); this.s1.reset(); this.p1.reset();
             this.a2.reset(); this.s2.reset(); this.p2.reset();
         }
 
         if (this.state !== GameState.RUNNING) return;
+        
+        if (this.screenShake > 0) this.screenShake *= 0.9;
+        if (this.screenShake < 0.5) this.screenShake = 0;
 
         let step = 3;
         if (this.inputHandler.isP1AngleUp()) this.a1.adjustValue(step);
@@ -802,18 +864,45 @@ class GamePanel {
         for (let r of cols) {
             this.fireEffects.push(new FireEffect(r.cx, r.cy));
             this.soundManager.play('explosion');
-            if (r.winner > 0) this.c1.addScore(GameConfig.SCORE_DESTROY);
-            else if (r.winner < 0) this.c2.addScore(GameConfig.SCORE_DESTROY);
+            this.screenShake = 15; // Apply screen shake juice
+            
+            if (r.winner > 0) {
+                this.c1.addScore(GameConfig.SCORE_DESTROY);
+                this.floatingTexts.push(new FloatingText(r.cx, r.cy - 20, '+10', '#0044ff'));
+            }
+            else if (r.winner < 0) {
+                this.c2.addScore(GameConfig.SCORE_DESTROY);
+                this.floatingTexts.push(new FloatingText(r.cx, r.cy - 20, '+10', '#ff0000'));
+            }
             else {
                 this.c1.addScore(GameConfig.SCORE_MUTUAL);
                 this.c2.addScore(GameConfig.SCORE_MUTUAL);
+                this.floatingTexts.push(new FloatingText(r.cx - 20, r.cy - 20, '+5', '#0044ff'));
+                this.floatingTexts.push(new FloatingText(r.cx + 20, r.cy - 20, '+5', '#ff0000'));
             }
+        }
+        
+        // Win Condition Check
+        if (this.c1.score >= GameConfig.SCORE_LIMIT || this.c2.score >= GameConfig.SCORE_LIMIT) {
+            this.state = GameState.GAME_OVER;
         }
     }
 
     render() {
         let ctx = this.ctx;
-        ctx.fillStyle = GameConfig.SKY_COLOR;
+        ctx.save();
+
+        if (this.screenShake > 0) {
+            let dx = (Math.random() - 0.5) * this.screenShake;
+            let dy = (Math.random() - 0.5) * this.screenShake;
+            ctx.translate(dx, dy);
+        }
+
+        let grad = ctx.createLinearGradient(0, 0, 0, GameConfig.WINDOW_HEIGHT);
+        grad.addColorStop(0, '#0f2027');
+        grad.addColorStop(0.5, '#203a43');
+        grad.addColorStop(1, '#2c5364');
+        ctx.fillStyle = grad;
         ctx.fillRect(0, 0, GameConfig.WINDOW_WIDTH, GameConfig.WINDOW_HEIGHT);
 
         ctx.fillStyle = GameConfig.GROUND_COLOR;
@@ -830,6 +919,12 @@ class GamePanel {
             if (f.done) this.fireEffects.splice(i, 1);
         }
 
+        for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+            let ft = this.floatingTexts[i];
+            ft.draw(ctx);
+            if (ft.life <= 0) this.floatingTexts.splice(i, 1);
+        }
+
         this.a1.draw(ctx); this.s1.draw(ctx); this.p1.draw(ctx);
         this.a2.draw(ctx); this.s2.draw(ctx); this.p2.draw(ctx);
 
@@ -838,6 +933,8 @@ class GamePanel {
 
         if (this.state === GameState.PAUSED) this.hud.drawPauseOverlay(ctx);
         else if (this.state === GameState.GAME_OVER) this.hud.drawGameOverOverlay(ctx, this.c1.score, this.c2.score);
+
+        ctx.restore();
     }
 }
 
